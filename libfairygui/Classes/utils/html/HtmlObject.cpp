@@ -68,6 +68,8 @@ void HtmlObject::create(FUIRichText* owner, HtmlElement* element)
     case HtmlElement::Type::OBJECT:
         createCommon();
         break;
+    default:
+        break;
     }
 }
 
@@ -77,6 +79,8 @@ void HtmlObject::destroy()
     {
     case HtmlElement::Type::IMAGE:
         ((GLoader*)_ui)->setURL(STD_STRING_EMPTY);
+        break;
+    default:
         break;
     }
 }
