@@ -15,6 +15,20 @@ bool GRoot::_soundEnabled = true;
 float GRoot::_soundVolumeScale = 1.0f;
 int GRoot::contentScaleLevel = 0;
 
+class SetUIRoot : public cocos2d::Node {
+public:
+    CREATE_FUNC(SetUIRoot);
+    
+    SetUIRoot():onVisit(nullptr) {}
+    
+    virtual void visit(cocos2d::Renderer *renderer, const cocos2d::Mat4& parentTransform, uint32_t parentFlags)
+    {
+        onVisit();
+    }
+    
+    std::function<void ()> onVisit;
+};
+
 GRoot* GRoot::create(Scene* scene, int zOrder)
 {
     GRoot* pRet = new (std::nothrow) GRoot();
@@ -511,26 +525,18 @@ void GRoot::handlePositionChanged()
     _displayObject->setPosition(0, _size.height);
 }
 
-void GRoot::onEnter()
+void GRoot::setNotAsUIRoot()
 {
-    GComponent::onEnter();
-    _inst = this;
-}
-
-void GRoot::onExit()
-{
-    GComponent::onExit();
-    if (_inst == this)
-        _inst = nullptr;
+    auto monitor = _displayObject->getChildByName<SetUIRoot *>("SetUIRoot");
+    if (monitor) {
+        monitor->removeFromParent();
+    }
 }
 
 bool GRoot::initWithScene(cocos2d::Scene* scene, int zOrder)
 {
     if (!GComponent::init())
         return false;
-
-    if (_inst == nullptr)
-        _inst = this;
 
     _inputProcessor = new InputProcessor(this);
     _inputProcessor->setCaptureCallback(CC_CALLBACK_1(GRoot::onTouchEvent, this));
@@ -541,6 +547,17 @@ bool GRoot::initWithScene(cocos2d::Scene* scene, int zOrder)
     onWindowSizeChanged();
 
     scene->addChild(_displayObject, zOrder);
+    
+    auto monitor = SetUIRoot::create();
+    monitor->onVisit = [this]() {
+        GRoot::_inst = this;
+    };
+    monitor->setName("SetUIRoot");
+    _displayObject->addChild(monitor);
+    
+    if (_inst == nullptr) {
+        _inst = this;
+    }
 
     return true;
 }

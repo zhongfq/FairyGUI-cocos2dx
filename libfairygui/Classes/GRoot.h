@@ -66,8 +66,9 @@ public:
 
 protected:
     virtual void handlePositionChanged() override;
-    virtual void onEnter() override;
-    virtual void onExit() override;
+    
+public:
+    void setNotAsUIRoot();
 
 private:
     bool initWithScene(cocos2d::Scene* scene, int zOrder);
